@@ -1,21 +1,20 @@
 from threading import Lock
 
-# TODO: limit max size
 
-
-class Stack:
-    def __init__(self):
+class Stack(object):
+    def __init__(self, limit=0):
         self.__items = []
         self.__size = 0
         self.__lock = Lock()
-
-    def __str__(self):
-        return "Stack: " + str(self.__items) + "< top"
+        self.__limit = limit
 
     def push(self, item):
         with self.__lock:
-            self.__size += 1
-            self.__items.append(item)
+            if not self.is_full():
+                self.__size += 1
+                self.__items.append(item)
+                return True
+            return False
 
     def pop(self):
         with self.__lock:
@@ -24,7 +23,8 @@ class Stack:
                 return self.__items.pop()
 
     def peek(self):
-        return self.__items[self.size() - 1]
+        with self.__lock:
+            return self.__items[self.__size - 1]
 
     def size(self):
         return self.__size
@@ -32,13 +32,17 @@ class Stack:
     def is_empty(self):
         return len(self.__items) == 0
 
+    def is_full(self):
+        return self.__limit == self.__size or self.__limit <= 0
+
     def clear(self):
         with self.__lock:
-            for i in range(self.size()):
+            for i in range(self.__size):
                 self.pop()
 
     def reverse(self):
-        self.__items.reverse()
+        with self.__lock:
+            self.__items.reverse()
 
     def reverse_recursive(self):
         if self.is_empty():
@@ -55,3 +59,5 @@ class Stack:
             self.__recursive_insert_at_bottom(item)
             self.push(tmp)
 
+    def __str__(self):
+        return "Stack: " + str(self.__items) + "< top"
